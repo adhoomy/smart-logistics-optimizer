@@ -78,6 +78,108 @@ The API will start at http://localhost:8080
 - GET /deliveries  
 - GET /stock
 
+### Postman Usage Examples
+
+Import these requests into Postman or use curl.
+
+Orders:
+```bash
+# Create
+curl -s -X POST http://localhost:8080/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerName":"Acme Corp",
+    "destinationAddress":"123 Market St, SF",
+    "quantity":10,
+    "deliveryDate":"2026-01-01T10:00:00",
+    "status":"PENDING"
+  }'
+
+# Get by id
+curl -s http://localhost:8080/orders/1
+
+# Get all
+curl -s http://localhost:8080/orders
+
+# Update
+curl -s -X PUT http://localhost:8080/orders/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerName":"Globex",
+    "destinationAddress":"456 Elm St, NY",
+    "quantity":8,
+    "deliveryDate":"2026-01-02T12:00:00",
+    "status":"CONFIRMED"
+  }'
+
+# Delete
+curl -s -X DELETE http://localhost:8080/orders/1 -i
+```
+
+Deliveries:
+```bash
+# Create (requires an orderId)
+curl -s -X POST http://localhost:8080/deliveries \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicleId":"TRUCK-42",
+    "route":"A-B-C",
+    "orderId":1
+  }'
+
+# Get by id
+curl -s http://localhost:8080/deliveries/1
+
+# Get all
+curl -s http://localhost:8080/deliveries
+
+# Update
+curl -s -X PUT http://localhost:8080/deliveries/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicleId":"TRUCK-9",
+    "route":"A-C",
+    "orderId":1
+  }'
+
+# Delete
+curl -s -X DELETE http://localhost:8080/deliveries/1 -i
+```
+
+Stock:
+```bash
+# Create
+curl -s -X POST http://localhost:8080/stock \
+  -H "Content-Type: application/json" \
+  -d '{
+    "warehouseId":"W1",
+    "productName":"Widget",
+    "quantity":100,
+    "sku":"SKU-001",
+    "location":"A1"
+  }'
+
+# Get by id
+curl -s http://localhost:8080/stock/1
+
+# Get all
+curl -s http://localhost:8080/stock
+
+# Update
+curl -s -X PUT http://localhost:8080/stock/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "warehouseId":"W2",
+    "productName":"Widget",
+    "quantity":80,
+    "sku":"SKU-001",
+    "location":"B2"
+  }'
+
+# Delete
+curl -s -X DELETE http://localhost:8080/stock/1 -i
+```
+
 ### Optimizer (Python)
 Requirements: Python 3.10+
 
@@ -95,7 +197,7 @@ Logistics Optimizer Ready
 ```
 
 ## Notes
-- The backend uses in-memory stores for simplicity. Replace with a database later.
-- The optimizer service is a skeleton; plug in your algorithms and LLM calls.
+- Backend now uses PostgreSQL (dev) and H2 (tests) via JPA.
+- Optimizer service is a skeleton; plug in your algorithms and LLM calls.
 
 

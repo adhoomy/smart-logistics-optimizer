@@ -1,52 +1,68 @@
 package com.smartlogistics.optimizer.controller;
 
-import com.smartlogistics.optimizer.model.Order;
+import com.smartlogistics.optimizer.controller.dto.OrderDtos;
+import com.smartlogistics.optimizer.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/orders")
 public class OrderController {
-    private final Map<Long, Order> store = new ConcurrentHashMap<>();
 
-    @GetMapping
-    public Collection<Order> list() {
-        return store.values();
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Order> get(@PathVariable Long id) {
-        Order order = store.get(id);
-        return order == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(order);
-    }
-
+    /**
+     * POST /orders - Create a new order
+     * Example request:
+     * {
+     *   "customerName": "Acme Corp",
+     *   "destinationAddress": "123 Market St, SF",
+     *   "quantity": 10,
+     *   "deliveryDate": "2025-12-01T10:00:00",
+     *   "status": "PENDING"
+     * }
+     * Example response (201):
+     * {
+     *   "id": 1,
+     *   "customerName": "Acme Corp",
+     *   "destinationAddress": "123 Market St, SF",
+     *   "quantity": 10,
+     *   "deliveryDate": "2025-12-01T10:00:00",
+     *   "status": "PENDING",
+     *   "createdAt": "2025-09-18T12:00:00"
+     * }
+     */
     @PostMapping
-    public ResponseEntity<Order> create(@RequestBody @Valid Order order) {
-        store.put(order.getId(), order);
-        return ResponseEntity.status(HttpStatus.CREATED).body(order);
+    public ResponseEntity<OrderDtos.Response> create(@RequestBody @Valid OrderDtos.CreateRequest req) {
+        var res = orderService.create(req);
+        return ResponseEntity.created(URI.create("/orders/" + res.id()))
+                .body(res);
     }
 
+    /** GET /orders/{id} */
+    @GetMapping("/{id}")
+    public OrderDtos.Response get(@PathVariable("id") Long id) { return orderService.get(id); }
+
+    /** GET /orders */
+    @GetMapping
+    public List<OrderDtos.Response> list() { return orderService.list(); }
+
+    /** PUT /orders/{id} */
     @PutMapping("/{id}")
-    public ResponseEntity<Order> update(@PathVariable Long id, @RequestBody @Valid Order payload) {
-        Order existing = store.get(id);
-        if (existing == null) return ResponseEntity.notFound().build();
-        existing.setCustomerName(payload.getCustomerName());
-        existing.setDestinationAddress(payload.getDestinationAddress());
-        existing.setQuantity(payload.getQuantity());
-        existing.setDeliveryDate(payload.getDeliveryDate());
-        existing.setStatus(payload.getStatus());
-        return ResponseEntity.ok(existing);
-    }
+    public OrderDtos.Response update(@PathVariable("id") Long id, @RequestBody @Valid OrderDtos.UpdateRequest req) { return orderService.update(id, req); }
 
+    /** DELETE /orders/{id} */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        return store.remove(id) == null ? ResponseEntity.notFound().build() : ResponseEntity.noContent().build();
-    }
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) { orderService.delete(id); return ResponseEntity.noContent().build(); }
 }
 
 

@@ -1,52 +1,48 @@
 package com.smartlogistics.optimizer.controller;
 
-import com.smartlogistics.optimizer.model.Delivery;
+import com.smartlogistics.optimizer.controller.dto.DeliveryDtos;
+import com.smartlogistics.optimizer.service.DeliveryService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/deliveries")
 public class DeliveryController {
-    private final Map<Long, Delivery> store = new ConcurrentHashMap<>();
 
-    @GetMapping
-    public Collection<Delivery> list() {
-        return store.values();
-    }
+    private final DeliveryService deliveryService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Delivery> get(@PathVariable Long id) {
-        Delivery item = store.get(id);
-        return item == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(item);
-    }
+    public DeliveryController(DeliveryService deliveryService) { this.deliveryService = deliveryService; }
 
+    /** POST /deliveries */
     @PostMapping
-    public ResponseEntity<Delivery> create(@RequestBody @Valid Delivery item) {
-        store.put(item.getId(), item);
-        return ResponseEntity.status(HttpStatus.CREATED).body(item);
+    public ResponseEntity<DeliveryDtos.Response> create(@RequestBody @Valid DeliveryDtos.CreateRequest req) {
+        var res = deliveryService.create(req);
+        return ResponseEntity.created(URI.create("/deliveries/" + res.id())).body(res);
     }
 
+    /** GET /deliveries/{id} */
+    @GetMapping("/{id}")
+    public DeliveryDtos.Response get(@PathVariable("id") Long id) { return deliveryService.get(id); }
+
+    /** GET /deliveries */
+    @GetMapping
+    public List<DeliveryDtos.Response> list() { return deliveryService.list(); }
+
+    /** PUT /deliveries/{id} */
     @PutMapping("/{id}")
-    public ResponseEntity<Delivery> update(@PathVariable Long id, @RequestBody @Valid Delivery payload) {
-        Delivery existing = store.get(id);
-        if (existing == null) return ResponseEntity.notFound().build();
-        existing.setVehicleId(payload.getVehicleId());
-        existing.setRoute(payload.getRoute());
-        existing.setEstimatedTime(payload.getEstimatedTime());
-        existing.setStatus(payload.getStatus());
-        existing.setOrder(payload.getOrder());
-        return ResponseEntity.ok(existing);
+    public DeliveryDtos.Response update(@PathVariable("id") Long id, @RequestBody @Valid DeliveryDtos.UpdateRequest req) {
+        return deliveryService.update(id, req);
     }
 
+    /** DELETE /deliveries/{id} */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        return store.remove(id) == null ? ResponseEntity.notFound().build() : ResponseEntity.noContent().build();
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
+        deliveryService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
 
