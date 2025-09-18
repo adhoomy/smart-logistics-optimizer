@@ -22,19 +22,60 @@ Smart Logistics Optimizer is a monorepo that provides:
 
 ## Running Locally
 
-### Backend (Java Spring Boot)
-Requirements: Java 17+, Maven 3.9+
+### Prerequisites
+- Java 17+
+- Maven 3.9+
+- Python 3.10+
+- PostgreSQL 12+ (or Docker)
 
+### Database Setup
+
+#### Option 1: Docker (Recommended)
+```bash
+# Start PostgreSQL container
+docker run --name smart-logistics-db \
+  -e POSTGRES_DB=smart_logistics \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=password \
+  -p 5432:5432 \
+  -d postgres:15
+
+# Verify connection
+docker exec -it smart-logistics-db psql -U postgres -d smart_logistics
 ```
+
+#### Option 2: Local PostgreSQL Installation
+1. Install PostgreSQL 12+ from [postgresql.org](https://www.postgresql.org/download/)
+2. Create database:
+```sql
+CREATE DATABASE smart_logistics;
+CREATE USER postgres WITH PASSWORD 'password';
+GRANT ALL PRIVILEGES ON DATABASE smart_logistics TO postgres;
+```
+
+### Backend (Java Spring Boot)
+```bash
 cd backend
+
+# Set database environment variables (optional - defaults provided)
+export DB_URL=jdbc:postgresql://localhost:5432/smart_logistics
+export DB_USERNAME=postgres
+export DB_PASSWORD=password
+
+# Run the application
 mvn spring-boot:run
 ```
 
 The API will start at http://localhost:8080
 
-Sample endpoints:
+**Database Configuration:**
+- Default connection: `localhost:5432/smart_logistics`
+- Username: `postgres`, Password: `password`
+- Override with environment variables: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+
+**Sample endpoints:**
 - GET /orders
-- GET /deliveries
+- GET /deliveries  
 - GET /stock
 
 ### Optimizer (Python)

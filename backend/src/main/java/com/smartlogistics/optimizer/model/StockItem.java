@@ -1,32 +1,86 @@
 package com.smartlogistics.optimizer.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
-import java.time.Instant;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "stock")
 public class StockItem {
-    private String id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotBlank
-    private String sku;
+    @Column(name = "warehouse_id", nullable = false)
+    private String warehouseId;
 
     @NotBlank
-    private String location;
+    @Column(name = "product_name", nullable = false)
+    private String productName;
 
     @Min(0)
-    private int quantity;
+    @Column(nullable = false)
+    private Integer quantity;
 
-    private Instant updatedAt;
+    @Column(name = "sku", unique = true)
+    private String sku;
 
-    public StockItem() {
-        this.id = UUID.randomUUID().toString();
-        this.updatedAt = Instant.now();
+    @Column(name = "location")
+    private String location;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
-    public String getId() {
+    public StockItem() {}
+
+    public StockItem(String warehouseId, String productName, Integer quantity, String sku, String location) {
+        this.warehouseId = warehouseId;
+        this.productName = productName;
+        this.quantity = quantity;
+        this.sku = sku;
+        this.location = location;
+    }
+
+    // Getters and Setters
+    public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public void setWarehouseId(String warehouseId) {
+        this.warehouseId = warehouseId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     public String getSku() {
@@ -45,17 +99,12 @@ public class StockItem {
         this.location = location;
     }
 
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-        this.updatedAt = Instant.now();
-    }
-
-    public Instant getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
 
