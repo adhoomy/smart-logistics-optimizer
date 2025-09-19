@@ -1,10 +1,15 @@
 package com.smartlogistics.optimizer.service;
 
 import com.smartlogistics.optimizer.controller.dto.OrderDtos;
+import com.smartlogistics.optimizer.controller.dto.PaginationDtos;
 import com.smartlogistics.optimizer.exception.NotFoundException;
 import com.smartlogistics.optimizer.mapper.OrderMapper;
 import com.smartlogistics.optimizer.model.Order;
 import com.smartlogistics.optimizer.repository.OrderRepository;
+import com.smartlogistics.optimizer.repository.specification.OrderSpecifications;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,6 +37,18 @@ public class OrderService {
 
     public List<OrderDtos.Response> list() {
         return orderRepository.findAll().stream().map(orderMapper::toResponse).toList();
+    }
+
+    public PaginationDtos.PageResponse<OrderDtos.Response> list(Pageable pageable, 
+                                                               Order.OrderStatus status, 
+                                                               String customerName) {
+        Specification<Order> spec = Specification.where(OrderSpecifications.hasStatus(status))
+                .and(OrderSpecifications.hasCustomerNameContaining(customerName));
+        
+        Page<Order> page = orderRepository.findAll(spec, pageable);
+        Page<OrderDtos.Response> responsePage = page.map(orderMapper::toResponse);
+        
+        return PaginationDtos.PageResponse.of(responsePage);
     }
 
     public OrderDtos.Response update(Long id, OrderDtos.UpdateRequest req) {

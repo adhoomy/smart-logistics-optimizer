@@ -1,10 +1,15 @@
 package com.smartlogistics.optimizer.service;
 
 import com.smartlogistics.optimizer.controller.dto.StockDtos;
+import com.smartlogistics.optimizer.controller.dto.PaginationDtos;
 import com.smartlogistics.optimizer.exception.NotFoundException;
 import com.smartlogistics.optimizer.mapper.StockMapper;
 import com.smartlogistics.optimizer.model.StockItem;
 import com.smartlogistics.optimizer.repository.StockRepository;
+import com.smartlogistics.optimizer.repository.specification.StockSpecifications;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,6 +37,18 @@ public class StockService {
 
     public List<StockDtos.Response> list() {
         return stockRepository.findAll().stream().map(stockMapper::toResponse).toList();
+    }
+
+    public PaginationDtos.PageResponse<StockDtos.Response> list(Pageable pageable, 
+                                                               String warehouseId, 
+                                                               String productName) {
+        Specification<StockItem> spec = Specification.where(StockSpecifications.hasWarehouseId(warehouseId))
+                .and(StockSpecifications.hasProductNameContaining(productName));
+        
+        Page<StockItem> page = stockRepository.findAll(spec, pageable);
+        Page<StockDtos.Response> responsePage = page.map(stockMapper::toResponse);
+        
+        return PaginationDtos.PageResponse.of(responsePage);
     }
 
     public StockDtos.Response update(Long id, StockDtos.UpdateRequest req) {

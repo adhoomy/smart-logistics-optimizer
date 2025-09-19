@@ -74,9 +74,9 @@ The API will start at http://localhost:8080
 - Override with environment variables: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
 
 **Sample endpoints:**
-- GET /orders
-- GET /deliveries  
-- GET /stock
+- GET /orders (with pagination, sorting, filtering)
+- GET /deliveries (with pagination, sorting, filtering)
+- GET /stock (with pagination, sorting, filtering)
 
 ### Postman Usage Examples
 
@@ -98,8 +98,14 @@ curl -s -X POST http://localhost:8080/orders \
 # Get by id
 curl -s http://localhost:8080/orders/1
 
-# Get all
+# Get all (with pagination)
 curl -s http://localhost:8080/orders
+
+# Get paginated results
+curl -s "http://localhost:8080/orders?page=0&size=5&sort=status,asc"
+
+# Filter by status and customer name
+curl -s "http://localhost:8080/orders?status=PENDING&customerName=Acme"
 
 # Update
 curl -s -X PUT http://localhost:8080/orders/1 \
@@ -130,8 +136,14 @@ curl -s -X POST http://localhost:8080/deliveries \
 # Get by id
 curl -s http://localhost:8080/deliveries/1
 
-# Get all
+# Get all (with pagination)
 curl -s http://localhost:8080/deliveries
+
+# Get paginated results
+curl -s "http://localhost:8080/deliveries?page=0&size=5&sort=status,asc"
+
+# Filter by status and vehicle ID
+curl -s "http://localhost:8080/deliveries?status=IN_TRANSIT&vehicleId=TRUCK-42"
 
 # Update
 curl -s -X PUT http://localhost:8080/deliveries/1 \
@@ -162,8 +174,14 @@ curl -s -X POST http://localhost:8080/stock \
 # Get by id
 curl -s http://localhost:8080/stock/1
 
-# Get all
+# Get all (with pagination)
 curl -s http://localhost:8080/stock
+
+# Get paginated results
+curl -s "http://localhost:8080/stock?page=0&size=5&sort=quantity,asc"
+
+# Filter by warehouse ID and product name
+curl -s "http://localhost:8080/stock?warehouseId=W1&productName=Widget"
 
 # Update
 curl -s -X PUT http://localhost:8080/stock/1 \
@@ -196,8 +214,68 @@ Expected output:
 Logistics Optimizer Ready
 ```
 
+## API Features
+
+### Pagination, Sorting & Filtering
+
+All GET endpoints for `/orders`, `/deliveries`, and `/stock` support:
+
+**Pagination:**
+- `page`: Page number (default: 0)
+- `size`: Page size (default: 10)
+
+**Sorting:**
+- `sort`: Field and direction (e.g., "status,asc", "deliveryDate,desc")
+
+**Filtering:**
+
+**Orders (`/orders`):**
+- `status`: Filter by order status (PENDING, CONFIRMED, IN_PROGRESS, DELIVERED, CANCELLED)
+- `customerName`: Filter by customer name (partial match, case-insensitive)
+
+**Deliveries (`/deliveries`):**
+- `status`: Filter by delivery status (PENDING, IN_TRANSIT, DELIVERED, FAILED, CANCELLED)
+- `vehicleId`: Filter by vehicle ID (exact match)
+
+**Stock (`/stock`):**
+- `warehouseId`: Filter by warehouse ID (exact match)
+- `productName`: Filter by product name (partial match, case-insensitive)
+
+**Example API Calls:**
+
+```bash
+# Paginated orders with sorting
+curl "http://localhost:8080/orders?page=0&size=5&sort=status,asc"
+
+# Filter orders by status and customer
+curl "http://localhost:8080/orders?status=PENDING&customerName=Acme"
+
+# Paginated deliveries with filtering
+curl "http://localhost:8080/deliveries?page=1&size=10&status=IN_TRANSIT&vehicleId=TRUCK-42"
+
+# Stock items sorted by quantity
+curl "http://localhost:8080/stock?sort=quantity,desc&warehouseId=W1"
+```
+
+**Response Format:**
+All paginated endpoints return responses in this format:
+```json
+{
+  "content": [...],
+  "page": 0,
+  "size": 10,
+  "totalElements": 25,
+  "totalPages": 3,
+  "first": true,
+  "last": false,
+  "hasNext": true,
+  "hasPrevious": false
+}
+```
+
 ## Notes
 - Backend now uses PostgreSQL (dev) and H2 (tests) via JPA.
+- All GET endpoints support pagination, sorting, and filtering.
 - Optimizer service is a skeleton; plug in your algorithms and LLM calls.
 
 
